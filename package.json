@@ -1,0 +1,11 @@
+{
+  "name": "tm_basic_themer",
+  "version": "1.0.0-dev",
+  "description": "Converts XD basic theme artboard elements to CSS.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "tributemedia",
+  "license": "ISC"
+}
