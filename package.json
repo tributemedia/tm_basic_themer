@@ -9,7 +9,10 @@
   "author": "tributemedia",
   "license": "ISC",
   "dependencies": {
+    "add": "^2.0.6",
     "adm-zip": "^0.5.9",
-    "css-generator": "^1.0.1"
+    "css-generator": "^1.0.1",
+    "jsdoc": "^3.6.10",
+    "prompt-sync": "^4.2.0"
   }
 }
