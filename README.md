@@ -10,4 +10,4 @@ Download the zipped OS X folder, and place where desired. Make sure the app has 
 
 ## Usage
 
-Obtain the XD file needed and place within the resources directory. Then, simply run `./index` in the command line, and follow the prompts to run the program and get your CSS, which will be written to a filename of your choice within the output directory.
+Obtain the XD file needed and place within the resources directory. Then, simply run `./tm-basic-themer` in the command line, and follow the prompts to run the program and get your CSS, which will be written to a filename of your choice within the output directory.
