@@ -1,117 +1,39 @@
-var AdmZip = require('adm-zip');
-var fs = require('fs');
-var xd = new AdmZip('./resources/Narwhal-2021-v4.xd');
-var CssGen = require('css-generator');
-var css = CssGen.create({indentation: '  '});
-var manifestEntry = xd.getEntry('manifest');
-var manifestJSON = JSON.parse(manifestEntry.getData().toString('utf8'));
-var manifestChildren = manifestJSON['children'][0]['children'];
-var themeInfoJSON = '';
-var cssRules = [];
+let XDFile = require('./src/XDFile.js');
+let Manifest = require('./src/Manifest.js');
+let Theme = require('./src/Theme.js');
+let TMDefaultExtractor = require('./src/TMDefaultExtractor.js');
+let fs = require('fs');
+let prompt = require('prompt-sync')({sigint: true});
+let packageJSON = require('./package.json');
 
-manifestChildren.forEach(function(child){
-  if(child.hasOwnProperty('name') && child.name == 'theme-default.css COLORS') {
-    themeInfoJSON = child;
-  }
-});
+let xd = new XDFile();
 
-if(themeInfoJSON != '' && Object.keys(themeInfoJSON).length > 0 ) {
-  var path = 'artwork/' + themeInfoJSON.path + '/graphics/graphicContent.agc';
-  var themeJSON = JSON.parse(xd.getEntry(path).getData().toString('utf8'));
-  var themeChildren = themeJSON['children'][0]['artboard']['children'];
-  
-  themeChildren.forEach(function(child){
-    var className = '';
-    var cssRule = {};
+// Welcome and user input for filename
+console.log('Welcome to the TM Basic Theming Automater!');
+console.log(`v${packageJSON.version}`);
+console.log('\n');
+console.log('Please enter the name of your XD file (without extension).');
+console.log('IMPORTANT: Make sure your file is in the resources folder!');
+let filename = prompt();
 
-    if(child.hasOwnProperty('name') && child.name.startsWith('ellipse')) {
-      className = child.name.replace('ellipse-', '');
-      var r = child.style.fill.color.value.r;
-      var g = child.style.fill.color.value.g;
-      var b = child.style.fill.color.value.b;
+// Extract CSS from XD using instance of IExtractCSSFromXD
+console.log('Working, please wait.');
+xd.loadFile(filename);
+let man = new Manifest(xd);
+let theme = new Theme(xd, man);
+let extractor = new TMDefaultExtractor(man, theme);
+let output = extractor.extract();
 
-      cssRule = {
-        color: `rgb(${r},${g},${b})`
-      };
-    }
-    else if(child.hasOwnProperty('name') && child.name.endsWith('value')) {
-      var keyName = '';
-      className = child.name.replace('-value', '');
+// Get output filename from user, write contents and exit.
+console.log('Extraction complete! What do you want the output file name to be?');
+let outFilename = prompt();
 
-      if(className.endsWith('width')) {
-        keyName = 'width';
-      }
-      else if(className.endsWith('radius')) {
-        keyName = 'border-radius';
-      }
-
-      if(keyName !== '') {
-        cssRule = {
-          [keyName]: `${child.text.rawText}`
-        };
-      }
-      else {
-        //css.addRaw(`${child.text.rawText}`);
-        cssRules.push({
-          priority: 0,
-          raw: child.text.rawText
-        });
-      }
-    }
-
-    if(className !== '') {
-      className = '.' + className.replace('\u2014', '');
-
-      if(Object.keys(cssRule).length > 0) {
-        cssRules.push({
-          priority: 1,
-          rule: cssRule,
-          className: className
-        });
-        //css.addRule(`.${className}`, cssRule);
-      }
-    }
-  });
-  //console.log(JSON.stringify(themeChildren, null, 2));
-}
-
-//console.log(css.getOutput());
-//console.log(JSON.stringify(noCss, null, 2));
-//console.log(noCss.length);
-cssRules.forEach(function(rule){
-  if(rule.priority === 0) {
-    css.addRaw(rule.raw);
-  }
-});
-
-css.addRaw('\n');
-css.addRaw('\n');
-
-cssRules.forEach(function(rule){
-  if(rule.priority === 1) {
-    css.addRule(rule.className, rule.rule);
-  }
-});
-
-fs.writeFile('./output/output.css', css.getOutput(), function(err){
+fs.writeFile(`./output/${outFilename}.css`, output, function(err){
   if(err) {
-    console.log('ERROR');
+    console.log('There was a problem writing the output to file.');
     console.log(err);  
   }
-});
-console.log('DONE!');
-/*
-fs = require('fs');
-fs.writeFile('./output/output.txt', 'Hello World!', function(err){
-  if(err) {
-    console.log('ERROR');
-    console.log(err);  
+  else {
+    console.log('DONE! Check for your file in the output folder.');
   }
 });
-
-console.log('Finished');
-
-console.log(JSON.stringify(JSON.parse(entry.getData().toString('utf8')), 
-      null, 
-      5));
-*/
