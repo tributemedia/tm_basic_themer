@@ -2,3 +2,4 @@
 output/
 resources/
 node_modules/
+bin/
