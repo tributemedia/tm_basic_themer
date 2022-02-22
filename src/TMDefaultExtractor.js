@@ -2,6 +2,7 @@ let Manifest = require('./Manifest.js');
 let Theme = require('./Theme.js');
 let IExtractCSSFromXD = require('./IExtractCSSFromXD.js');
 let CSSRule = require('./CSSRule.js');
+let CSSVariable = require('./CSSVariable.js');
 let CssGen = require('css-generator');
 
 /**
@@ -19,6 +20,7 @@ let TMDefaultExtractor = class extends IExtractCSSFromXD {
       this.theme = theme;
       this.css = CssGen.create({indentation: '  '});
       this.cssRules = new Array();
+      this.cssVars = new Array();
     }
     else {
       console.error('Attempted to pass non Manifest or Theme objects into constructor. Aborting extraction.');
@@ -34,47 +36,51 @@ let TMDefaultExtractor = class extends IExtractCSSFromXD {
     let self = this;
 
     this.theme.elements.forEach(function(element){
-      let newRule = new CSSRule();
-      let className = '';
+      let varName = '';
+      let value = '';
       
-      // All ellipse element are assumed to be color containers.
+      // All ellipse elements are assumed to be color containers.
       if(element.hasOwnProperty('name') && element.name.startsWith('ellipse')) {
-        let r = element.style.fill.color.value.r;
-        let g = element.style.fill.color.value.g;
-        let b = element.style.fill.color.value.b;
-        className = element.name.replace('ellipse-', '');
+        
+        let cssVar = new CSSVariable();
+        varName = element.name.replace('ellipse-', '');
+        varName = varName.replace('\u2014', '');
 
-        newRule.setDefinition('color', `rgb(${r},${g},${b})`);
+        if(element.style.fill.type != 'none') {
+
+          let r = element.style.fill.color.value.r;
+          let g = element.style.fill.color.value.g;
+          let b = element.style.fill.color.value.b;
+          value = `rgb(${r},${g},${b})`;
+
+        }
+        else {
+
+          value = 'transparent';
+
+        }
+
+        cssVar.set(varName, value);
+        self.cssVars.push(cssVar);
       }
       // All other elements are assumed to be pixel value holders. Right now, only width and border-radius
       // are supported.
       else if(element.hasOwnProperty('name') && element.name.endsWith('value')) {
-        var keyName = '';
-        className = element.name.replace('-value', '');
+        varName = element.name.replace('-value', '');
 
-        if(className.endsWith('width')) {
-          keyName = 'width';
-        }
-        else if(className.endsWith('radius')) {
-          keyName = 'border-radius';
-        }
+        if(varName.endsWith('width') || varName.endsWith('radius')) {
+          let cssVar = new CSSVariable();
 
-        if(keyName !== '') {
-          newRule.setDefinition(keyName, `${element.text.rawText}`);
+          value = `${element.text.rawText}`;
+          varName = varName.replace('\u2014', '');
+          cssVar.set(varName, value);
+          self.cssVars.push(cssVar);
         }
         else {
+          let newRule = new CSSRule();
+
           newRule.setRaw(element.text.rawText);
           newRule.setPriority(0);
-          self.cssRules.push(newRule);
-        }
-      }
-
-      // Remove any existing emdashes, and add the CSS Rule
-      if(className !== '') {
-        className = className.replace('\u2014', '');
-        
-        if(Object.keys(newRule.body).length > 0) {
-          newRule.setClass(className);
           self.cssRules.push(newRule);
         }
       }
@@ -92,10 +98,8 @@ let TMDefaultExtractor = class extends IExtractCSSFromXD {
     self.css.addRaw('\n');
     self.css.addRaw('\n');
     
-    this.cssRules.forEach(function(rule){
-      if(rule.priority === 1) {
-        self.css.addRule(rule.selector, rule.body);
-      }
+    this.cssVars.forEach(function(cssVar){
+      self.css.addRaw(cssVar.toString());
     });
 
     return this.css.getOutput();
