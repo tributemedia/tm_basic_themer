@@ -41,13 +41,25 @@ let TMDefaultExtractor = class extends IExtractCSSFromXD {
       
       // All ellipse elements are assumed to be color containers.
       if(element.hasOwnProperty('name') && element.name.startsWith('ellipse')) {
-        let r = element.style.fill.color.value.r;
-        let g = element.style.fill.color.value.g;
-        let b = element.style.fill.color.value.b;
+        
         let cssVar = new CSSVariable();
         varName = element.name.replace('ellipse-', '');
         varName = varName.replace('\u2014', '');
-        value = `rgb(${r},${g},${b})`;
+
+        if(element.style.fill.type != 'none') {
+
+          let r = element.style.fill.color.value.r;
+          let g = element.style.fill.color.value.g;
+          let b = element.style.fill.color.value.b;
+          value = `rgb(${r},${g},${b})`;
+
+        }
+        else {
+
+          value = 'transparent';
+
+        }
+
         cssVar.set(varName, value);
         self.cssVars.push(cssVar);
       }
