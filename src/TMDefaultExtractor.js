@@ -34,7 +34,8 @@ let TMDefaultExtractor = class extends IExtractCSSFromXD {
    */
   extract() {
     let self = this;
-
+    let root = {};
+    
     this.theme.elements.forEach(function(element){
       let varName = '';
       let value = '';
@@ -99,9 +100,11 @@ let TMDefaultExtractor = class extends IExtractCSSFromXD {
     self.css.addRaw('\n');
     
     this.cssVars.forEach(function(cssVar){
-      self.css.addRaw(cssVar.toString());
+      root[`${cssVar.getName()}`] = cssVar.getValue();
     });
 
+    this.css.addRule(':root', root);
+    
     return this.css.getOutput();
   }
 }
