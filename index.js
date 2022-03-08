@@ -2,9 +2,11 @@ let XDFile = require('./src/XDFile.js');
 let Manifest = require('./src/Manifest.js');
 let Theme = require('./src/Theme.js');
 let TMDefaultExtractor = require('./src/TMDefaultExtractor.js');
+let FileCSSInjector = require('./src/FileCSSInjector.js');
 let fs = require('fs');
 let prompt = require('prompt-sync')({sigint: true});
 let packageJSON = require('./package.json');
+let cssparser = require('css');
 
 let xd = new XDFile();
 let resourceFiles = [];
@@ -77,17 +79,7 @@ let man = new Manifest(xd);
 let theme = new Theme(xd, man);
 let extractor = new TMDefaultExtractor(man, theme);
 let output = extractor.extract();
+let injector = new FileCSSInjector(1);
 
-// Get output filename from user, write contents and exit.
-console.log('Extraction complete! What do you want the output file name to be?');
-let outFilename = prompt();
-
-fs.writeFile(`./output/${outFilename}.css`, output, function(err){
-  if(err) {
-    console.log('There was a problem writing the output to file.');
-    console.log(err);  
-  }
-  else {
-    console.log('DONE! Check for your file in the output folder.');
-  }
-});
+injector.inject(output);
+//console.log(JSON.stringify(cssparser.parse(output), null, 2));

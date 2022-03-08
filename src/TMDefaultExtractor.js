@@ -79,8 +79,9 @@ let TMDefaultExtractor = class extends IExtractCSSFromXD {
         }
         else {
           let newRule = new CSSRule();
+          let importText = element.text.rawText.replace('\u2019', "'").replace('\u2018', "'");
 
-          newRule.setRaw(element.text.rawText);
+          newRule.setRaw(importText);
           newRule.setPriority(0);
           self.cssRules.push(newRule);
         }
