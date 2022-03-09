@@ -79,7 +79,6 @@ let man = new Manifest(xd);
 let theme = new Theme(xd, man);
 let extractor = new TMDefaultExtractor(man, theme);
 let output = extractor.extract();
-let injector = new FileCSSInjector(1);
+let injector = new FileCSSInjector(2);
 
 injector.inject(output);
-//console.log(JSON.stringify(cssparser.parse(output), null, 2));
