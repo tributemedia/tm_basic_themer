@@ -30,6 +30,14 @@ let CSSVariable = class {
     this.#export = '';
   }
 
+  getName() {
+    return this.#name;
+  }
+
+  getValue() {
+    return this.#value;
+  }
+
   /**
    * Sets the name and value of the variable, along with the export string.
    * 

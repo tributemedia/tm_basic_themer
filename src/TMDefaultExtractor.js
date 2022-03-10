@@ -34,7 +34,8 @@ let TMDefaultExtractor = class extends IExtractCSSFromXD {
    */
   extract() {
     let self = this;
-
+    let root = {};
+    
     this.theme.elements.forEach(function(element){
       let varName = '';
       let value = '';
@@ -78,8 +79,9 @@ let TMDefaultExtractor = class extends IExtractCSSFromXD {
         }
         else {
           let newRule = new CSSRule();
+          let importText = element.text.rawText.replace('\u2019', "'").replace('\u2018', "'");
 
-          newRule.setRaw(element.text.rawText);
+          newRule.setRaw(importText);
           newRule.setPriority(0);
           self.cssRules.push(newRule);
         }
@@ -99,9 +101,11 @@ let TMDefaultExtractor = class extends IExtractCSSFromXD {
     self.css.addRaw('\n');
     
     this.cssVars.forEach(function(cssVar){
-      self.css.addRaw(cssVar.toString());
+      root[`${cssVar.getName()}`] = cssVar.getValue();
     });
 
+    this.css.addRule(':root', root);
+    
     return this.css.getOutput();
   }
 }
